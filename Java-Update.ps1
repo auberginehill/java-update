@@ -4,7 +4,7 @@ Java-Update.ps1
 Please Note:
 - It's assumed that a 64-bit Java is going to be used in a 64-bit machine.
 - It's assumed that only one (the most recent non-beta available) version of Java is intended to be used.
-- If enough rights are deemed to be possessed (run as an administrator), any not up-to-date versions of Java will be uninstalled, and if the most recent non-beta version of Java is not found on the system, one instance will be installed (the 64-bit Java to a 64-bit machine and the 32-bit Java to a 32-bit machine).
+- If enough rights are deemed to be possessed (PowerShell has been started with the 'run as an administrator' option), any not up-to-date versions of Java will be uninstalled, and successively if the most recent non-beta version of Java is not found on the system, one instance will be installed (the 64-bit Java to a 64-bit machine and the 32-bit Java to a 32-bit machine).
 - So if, for example, 32-bit and 64-bit outdated Java is installed in a 64-bit machine, only the most recent 64-bit Java replaces those versions. For more granular uninstallation/installation procedures, please consider doing the uninstallation manually via the Control Panel or by using the Java Uninstall Tool (please see the Step 19 for futher details about the Java Uninstall Tool) and downloading the relevant files manually (for download URLs, please see the Step 16 below) or changing this script according to the prevailing preferences.
 - System Files are altered, for instance, in Steps 4, 5, 19 and 24.
 - Please consider reviewing at least the Steps 4 and 5, since eventually (after some update iterations) the written settings will also be used in the Java installations not initiated by this script.

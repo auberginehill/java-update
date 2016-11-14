@@ -1896,7 +1896,7 @@ below won't affect the script in any meaningful way)
     EULA=0                          If a Java applet or Java Web Start application is
                                     launched, do not prompt the user to accept the end-user
                                     license agreement.
-    REBOOT=0                        The installer will never prompt you to restart your
+    REBOOT=0                        The installer will never prompt for restarting the
                                     computer after installing the JRE.
     REBOOT=Suppress
     REBOOT=ReallySuppress
@@ -1918,11 +1918,13 @@ After the installation the downloaded files (uninstaller and the install file) a
 not purged from the $path directory.
 
 
-Additionally two auxiliary csv-files are cerated at $path.
+Additionally two auxiliary csv-files are created at $path and during the actual
+update procedure a log-file is also created to the same location.
 
 
     java_update_chart.csv           Gathered from an online XML-file.
     java_baseline.csv               Containing the most recent Java version numbers. 
+    java_install.log                A log-file about the installation procedure.
 
 
 To open these file locations in a Resource Manager Window, for instance a command

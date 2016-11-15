@@ -170,7 +170,7 @@ If ($existing_javas -ne $null) {
     If ((Check-JavaID $regex_32_a -ne $null) -or (Check-JavaID $regex_32_b -ne $null) -or (Check-JavaID $regex_32_c -ne $null) -or (Check-JavaID $regex_32_d -ne $null)) {
 
         $32_bit_java_is_installed = $true
-        $original_java_32_bit_powershell_uninstall_string = ($obj_original_java | Where-Object { $_.Type -eq "32-bit" }).PowerShell_Uninstall_String
+        $original_java_32_bit_powershell_uninstall_string = $obj_original_java | Where-Object { $_.Type -eq "32-bit" } | Select-Object -ExpandProperty PowerShell_Uninstall_String
 
     } Else {
         $continue = $true
@@ -181,7 +181,7 @@ If ($existing_javas -ne $null) {
     If ((Check-JavaID $regex_64_a -ne $null) -or (Check-JavaID $regex_64_b -ne $null)) {
 
         $64_bit_java_is_installed = $true
-        $original_java_64_bit_powershell_uninstall_string = ($obj_original_java | Where-Object { $_.Type -eq "64-bit" }).PowerShell_Uninstall_String
+        $original_java_64_bit_powershell_uninstall_string = $obj_original_java | Where-Object { $_.Type -eq "64-bit" } | Select-Object -ExpandProperty PowerShell_Uninstall_String
 
     } Else {
         $continue = $true
@@ -189,22 +189,22 @@ If ($existing_javas -ne $null) {
 
 
     # Installed Version(s)
-    $installed_java_version_text_format = $obj_original_java.Name
+    $installed_java_version_text_format = ($obj_original_java | Select-Object -ExpandProperty Name)
 
     # Installed Java Version Number(s)
-    $installed_java_version = ($obj_original_java | Where-Object { $_.Name -ne "Java Auto Updater" }).Version
+    $installed_java_version = $obj_original_java | Where-Object { $_.Name -ne "Java Auto Updater" } | Select-Object -ExpandProperty Version
 
     # Installed Java Main Version(s)
-    $installed_java_major_version = ($obj_original_java | Where-Object { $_.Name -ne "Java Auto Updater" }).Major_Version
+    $installed_java_major_version = $obj_original_java | Where-Object { $_.Name -ne "Java Auto Updater" } | Select-Object -ExpandProperty Major_Version
 
     # Installed Java Update Number(s)
-    $installed_java_update_number = ($obj_original_java | Where-Object { $_.Name -ne "Java Auto Updater" }).Update_Number
+    $installed_java_update_number = $obj_original_java | Where-Object { $_.Name -ne "Java Auto Updater" } | Select-Object -ExpandProperty Update_Number
 
     # Installed Build Number(s)
-    $installed_java_build_number = ($obj_original_java | Where-Object { $_.Name -ne "Java Auto Updater" }).Build_Number
+    $installed_java_build_number = $obj_original_java | Where-Object { $_.Name -ne "Java Auto Updater" } | Select-Object -ExpandProperty Build_Number
 
     # Java Installation Path(s)
-    $java_home_path = ($obj_original_java | Where-Object { $_.Name -ne "Java Auto Updater" }).Install_Location
+    $java_home_path = $obj_original_java | Where-Object { $_.Name -ne "Java Auto Updater" } | Select-Object -ExpandProperty Install_Location
 
     # Java Auto Updater Is Installed?
     If (Check-InstalledSoftware "Java Auto Updater") { $auto_updater_is_installed = $true } Else { $continue = $true }
@@ -430,8 +430,11 @@ If ((Test-Path $java_reg_path) -eq $true) {
 
 
     # Installed Java Build Name
-    $installed_java_build_name_reg = (Get-ItemProperty -Path "$java_reg_path\$installed_java_version_reg\MSI" -Name FullVersion).FullVersion
-
+    If ((Test-Path $java_reg_path\$installed_java_version_reg\MSI) -eq $true) {
+        $installed_java_build_name_reg = (Get-ItemProperty -Path "$java_reg_path\$installed_java_version_reg\MSI" -Name FullVersion).FullVersion
+    } Else {
+    $continue = $true
+    } # else
 
 } Else {
     $continue = $true
@@ -696,6 +699,8 @@ If ((($number_of_installed_javas -eq 1) -and ($auto_updater_is_installed -eq $fa
 # Enumerate the existing installed Javas
 $registry_paths_selection = Get-ItemProperty $registry_paths -ErrorAction SilentlyContinue | Where-Object { ($_.DisplayName -like "*Java*" -or $_.DisplayName -like "*J2SE Runtime*") -and ($_.Publisher -like "Oracle*" -or $_.Publisher -like "Sun*" )}
 
+If ($registry_paths_selection -ne $null) {
+
     ForEach ($item in $registry_paths_selection) {
 
         # Custom Uninstall Strings
@@ -753,6 +758,9 @@ $registry_paths_selection = Get-ItemProperty $registry_paths -ErrorAction Silent
             $continue = $true
         } # else
 
+} Else {
+    $continue = $true
+} # else (Step 7)
 
 
 
@@ -782,6 +790,13 @@ $baseline_file = "$path\java_baseline.csv"
         catch [System.Net.WebException]
         {
             Write-Warning "Failed to access $baseline_url"
+            If (([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]'{DCB00C01-570F-4A9B-8D69-199FDBA5723B}')).IsConnectedToInternet) -eq $true) {
+                $page_exception_text = "Please consider running this script again. Sometimes this Oracle page just isn't queryable for no apparent reason. The success rate 'in the second go' usually seems to be a bit higher."
+                $empty_line | Out-String
+                Write-Output $page_exception_text
+            } Else {
+                $continue = $true
+            } # else
             $empty_line | Out-String
             Return "Exiting without checking the latest Java version numbers or without updating Java (at Step 9)."
         }
@@ -837,7 +852,7 @@ $update_chart | Export-Csv $path\java_update_chart.csv -Delimiter ';' -NoTypeInf
 # Step 11
 # Check the Info on the most recent Java version Home Page (XML) by connecting to the Java/Oracle website (Page 3, The Home Page)
 # https://javadl-esd-secure.oracle.com/update/1.8.0/au-descriptor-1.8.0_111-b14.xml
-$most_recent_xml_home_page = $java_update_map.SelectNodes("/java-update-map/mapping")[0].url
+$most_recent_xml_home_page = ($java_update_map.SelectNodes("/java-update-map/mapping") | Select-Object -First 1).url
 
         try
         {
@@ -852,14 +867,14 @@ $most_recent_xml_home_page = $java_update_map.SelectNodes("/java-update-map/mapp
         }
 
 # Further Info URL:
-$further_info_url = $xml_info.SelectNodes("/java-update/information")[0] | Select-Object -ExpandProperty moreinfo
+$further_info_url = $xml_info.SelectNodes("/java-update/information") | Select-Object -First 1 | Select-Object -ExpandProperty moreinfo
 
 # Description:
-$description = $xml_info.SelectNodes("/java-update/information")[0] | Select-Object -ExpandProperty descriptionfrom8
+$description = $xml_info.SelectNodes("/java-update/information") | Select-Object -First 1 | Select-Object -ExpandProperty descriptionfrom8
 
 # Current Version (Full, with an underscore and a dash: x.y.z_nnn-abc):
 # 1.8.0_111-b14
-$current_version_build = ($xml_info.SelectNodes("/java-update/information")[0] | Select-Object -ExpandProperty version)[1]
+$current_version_build = ($xml_info.SelectNodes("/java-update/information") | Select-Object -First 1 | Select-Object -ExpandProperty version)[-1]
 
 # Most Recent Java Version
 $most_recent_java_version = [string]'Java ' + $current_main_version + ' Update ' + $current_update_number
@@ -869,7 +884,7 @@ $current_build_number = $current_version_build.Split("-")[-1]
 
 # Download URL:
 # http://javadl.oracle.com/webapps/download/GetFile/1.8.0_111-b14/windows-i586/jre-8u111-windows-au.exe
-$download_url = $xml_info.SelectNodes("/java-update/information")[0] | Select-Object -ExpandProperty url
+$download_url = $xml_info.SelectNodes("/java-update/information") | Select-Object -First 1 | Select-Object -ExpandProperty url
 
 # Custom Download URL:
 # http://javadl.sun.com/webapps/download/GetFile/1.8.0_111-b14/windows-i586/xpiinstall.exe
@@ -925,9 +940,9 @@ If ($java_is_installed -eq $true) {
     $most_recent_32_bit_java_already_exists = Check-InstalledSoftware "Java $current_main_version Update $current_update_number"
     $most_recent_64_bit_java_already_exists = Check-InstalledSoftware "Java $current_main_version Update $current_update_number (64-bit)"
     $java_auto_updater_exists = Check-InstalledSoftware "Java Auto Updater"
-    $all_32_bit_javas = $obj_java_enumeration | Where-Object Type -match "32-bit"
+    $all_32_bit_javas = $obj_java_enumeration | Where-Object { $_.Type -eq "32-bit" }
     $number_of_32_bit_javas = ($all_32_bit_javas | Measure-Object).Count
-    $all_64_bit_javas = $obj_java_enumeration | Where-Object Type -match "64-bit"
+    $all_64_bit_javas = $obj_java_enumeration | Where-Object { $_.Type -eq "64-bit" }
     $number_of_64_bit_javas = ($all_64_bit_javas | Measure-Object).Count
 
     # 32-bit
@@ -1141,7 +1156,7 @@ If ($java_is_installed -eq $true) {
         $title_1 = "Install Java"
         $message_1 = "Would you like to install the Java for Windows with this script?"
 
-        $yes = New-Object System.Management.Automation.Host.ChoiceDescription    "&Yes",    "Yes:     tries to download a full offline Java installer (either 32- or 64-bit according to the system) and install Java."
+        $yes = New-Object System.Management.Automation.Host.ChoiceDescription    "&Yes",    "Yes:     downloads a full offline Java installer (either 32- or 64-bit according to the system) and installs Java."
         $no = New-Object System.Management.Automation.Host.ChoiceDescription     "&No",     "No:      exits from this script (similar to Ctrl + C)."
         $exit = New-Object System.Management.Automation.Host.ChoiceDescription   "&Exit",   "Exit:    exits from this script (similar to Ctrl + C)."
         $abort = New-Object System.Management.Automation.Host.ChoiceDescription  "A&bort",  "Abort:   exits from this script (similar to Ctrl + C)."
@@ -1225,6 +1240,16 @@ $task                 = "Setting Initial Variables" # A description of the curre
 
 # Start the progress bar
 Write-Progress -Id $id -Activity $activity -Status $status -CurrentOperation $task -PercentComplete (($task_number / $total_steps) * 100)
+
+    # Specify [Esc] and [q] as the Cancel-key                                                 # Credit: Jeff: "Powershell show elapsed time"
+    If ($Host.UI.RawUI.KeyAvailable -and ("q" -eq $Host.UI.RawUI.ReadKey("IncludeKeyUp,NoEcho").Character)) {
+        Write-Host " ...Stopping the Java Update Protocol...";
+        Break;
+    } ElseIf ($Host.UI.RawUI.KeyAvailable -and (([char]27) -eq $Host.UI.RawUI.ReadKey("IncludeKeyUp,NoEcho").Character)) {
+        Write-Host " ...Stopping the Java Update Protocol..."; Break;
+    } Else {
+        $continue = $true
+    } # else
 
 
 
@@ -1676,7 +1701,6 @@ $new_java_auto_updater_exists = Check-InstalledSoftware "Java Auto Updater"
                         $empty_line | Out-String
                         Write-Output $new_uninstall_text
 
-
     } Else {
         $continue = $true
     } # else
@@ -1728,7 +1752,7 @@ $runtime = ($end_time) - ($start_time)
 # Display the runtime in console
 $empty_line | Out-String
 $timestamp_end = Get-Date -Format HH:mm:ss
-$end_text = "$timestamp_end - The Java Update Protocol completed."
+$end_text = "$timestamp_end - Java Update Protocol completed."
 Write-Output $end_text
 $empty_line | Out-String
 $runtime_text = "The update took $runtime_result."
@@ -1757,6 +1781,7 @@ http://stackoverflow.com/questions/29266622/how-to-run-exe-with-without-elevated
 http://stackoverflow.com/questions/5466329/whats-the-best-way-to-determine-the-location-of-the-current-powershell-script?noredirect=1&lq=1      # JaredPar and Matthew Pirocchi "What's the best way to determine the location of the current PowerShell script?"
 https://technet.microsoft.com/en-us/library/ff730939.aspx                                                           # "Adding a Simple Menu to a Windows PowerShell Script"
 http://powershell.com/cs/forums/t/9685.aspx                                                                         # lamaar75: "Creating a Menu"
+http://stackoverflow.com/questions/10941756/powershell-show-elapsed-time                                            # Jeff: "Powershell show elapsed time"
 
 
 
@@ -1823,8 +1848,8 @@ elevated Powershell window. In addition to that...
 
 
 The Java Deployment Configuration File (deployment.properties) is altered with new parameters,
-if it is found in one of its default Windows locations and the following backups are made. To 
-see the actual values that are being written, please see the Step 4 above (altering the 
+if it is found in one of its default Windows locations and the following backups are made. To
+see the actual values that are being written, please see the Step 4 above (altering the
 duplicated values below won't affect the script in any meaningful way):
 
 
@@ -1869,18 +1894,18 @@ please see the "Deployment Configuration File and Properties" page at
 http://docs.oracle.com/javase/8/docs/technotes/guides/deploy/properties.html
 
 
-An Install Configuration File is created in Step 5. To see the actual values that 
-are being written, please see the Step 5 above (altering the duplicated values 
+An Install Configuration File is created in Step 5. To see the actual values that
+are being written, please see the Step 5 above (altering the duplicated values
 below won't affect the script in any meaningful way)
 
 
     Install Configuration File in Step 5 (java_config.txt):
 
         Windows:          [Current_Windows_Temporary_File_Folder]
-                                
-                                
+
+
     Please see the Notes-section below, how to determine where the current Windows
-    temporary file folder is located. In PowerShell the command $env:temp displays 
+    temporary file folder is located. In PowerShell the command $env:temp displays
     the temp-folder path.
 
 
@@ -1923,7 +1948,7 @@ update procedure a log-file is also created to the same location.
 
 
     java_update_chart.csv           Gathered from an online XML-file.
-    java_baseline.csv               Containing the most recent Java version numbers. 
+    java_baseline.csv               Containing the most recent Java version numbers.
     java_install.log                A log-file about the installation procedure.
 
 
@@ -1941,7 +1966,7 @@ To open these file locations in a Resource Manager Window, for instance a comman
     Invoke-Item $env:temp
 
 
-may be used at the PowerShell prompt window [PS>]. 
+may be used at the PowerShell prompt window [PS>].
 
 .NOTES
 Requires a working Internet connection for downloading a list of the most recent
@@ -1959,16 +1984,16 @@ uninstalling Java and installing Java.
 Please also notice that during the actual update phase Java-Update closes a bunch
 of processes without any further notice in Step 18 and may do so also in Step 6.
 Please also note that Java-Update alters the system files at least in Steps 4, 5, 19
-and 24, so that for instance, all successive Java installations (even the ones not 
-initiated by this Java-Update script) will be done "silently" i.e. without any 
+and 24, so that for instance, all successive Java installations (even the ones not
+initiated by this Java-Update script) will be done "silently" i.e. without any
 interactive pages or prompts.
 
 Please note that when run in an elevated PowerShell window and old Java(s)
-is/are detected, Java-Update will automatically try to uninstall them and download 
-files from the Internet without prompting the end-user beforehand or without asking 
+is/are detected, Java-Update will automatically try to uninstall them and download
+files from the Internet without prompting the end-user beforehand or without asking
 any confirmations (in Step 6 and from Step 16 onwards).
 
-Please note that the downloaded files are placed in a directory, which is specified 
+Please note that the downloaded files are placed in a directory, which is specified
 with the $path variable (at line 15). The $env:temp variable points
 to the current temp folder. The default value of the $env:temp variable is
 C:\Users\<username>\AppData\Local\Temp (i.e. each user account has their own
@@ -1983,7 +2008,7 @@ http://www.eightforums.com/tutorials/23500-temporary-files-folder-change-locatio
 
     Homepage:           https://github.com/auberginehill/java-update
     Short URL:          http://tinyurl.com/hh7krx3
-    Version:            1.0
+    Version:            1.1
 
 .EXAMPLE
 ./Java-Update
@@ -2039,6 +2064,7 @@ http://stackoverflow.com/questions/29266622/how-to-run-exe-with-without-elevated
 http://stackoverflow.com/questions/5466329/whats-the-best-way-to-determine-the-location-of-the-current-powershell-script?noredirect=1&lq=1
 https://technet.microsoft.com/en-us/library/ff730939.aspx
 http://powershell.com/cs/forums/t/9685.aspx
+http://stackoverflow.com/questions/10941756/powershell-show-elapsed-time
 http://docs.oracle.com/javacomponents/msi-jre8/install-guide/installing_jre_msi.htm#msi_install_command_line
 http://docs.oracle.com/javacomponents/msi-jre8/install-guide/installing_jre_msi.htm#msi_install_instructions
 http://docs.oracle.com/javacomponents/msi-jre8/install-guide/installing_jre_msi.htm#msi_system_requirements

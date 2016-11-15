@@ -40,6 +40,7 @@ $uninstaller_tool_url = "https://javadl-esd-secure.oracle.com/update/jut/JavaUni
 # 32-bit Java ID Numbers (JRE 4 -)
 # Source: http://pastebin.com/73JqpTqv
 # Source: https://github.com/bmrf/standalone_scripts/blob/master/java_runtime_nuker.bat
+# Source: http://www.itninja.com/question/silent-uninstall-java-all-versions
 $regex_32_a = "{26A24AE4-039D-4CA4-87B4-2F32(\d+)..}"
 $regex_32_b = "{26A24AE4-039D-4CA4-87B4-2F.32(\d+)..}"
 $regex_32_c = "{3248F0A8-6813-11D6-A77B-00B0D0(\d+).}"
@@ -48,6 +49,7 @@ $regex_32_d = "{7148F0A8-6813-11D6-A77B-00B0D0(\d+).}"
 # 64-bit Java ID Numbers (Java 6 Update 23 -)
 # Source: http://pastebin.com/73JqpTqv
 # Source: https://github.com/bmrf/standalone_scripts/blob/master/java_runtime_nuker.bat
+# Source: http://www.itninja.com/question/silent-uninstall-java-all-versions
 $regex_64_a = "{26A24AE4-039D-4CA4-87B4-2F64(\d+)..}"
 $regex_64_b = "{26A24AE4-039D-4CA4-87B4-2F.64(\d+)..}"
 
@@ -103,6 +105,8 @@ $64_bit_java_is_installed = $false
 $auto_updater_is_installed = $false
 
 $existing_javas = Get-ItemProperty $registry_paths -ErrorAction SilentlyContinue | Where-Object { ($_.DisplayName -like "*Java*" -or $_.DisplayName -like "*J2SE Runtime*") -and ($_.Publisher -like "Oracle*" -or $_.Publisher -like "Sun*" )}
+# $query= "select * from win32_Product where (Name like 'Java %' or Name like 'Java(TM)%' or Name like 'J2SE%') and (Name <> 'Java Auto Updater') and ((Vendor='Sun Microsystems, Inc.') or (Vendor='Oracle') or (Vendor='Oracle Corporation')) and (NOT Name like '%CompuGROUP%') and (NOT Name like '%IBM%') and (NOT Name like '%DB%') and (NOT Name like '%Advanced Imaging%') and (NOT Name like '%Media Framework%') and (NOT Name like '%SDK%') and (NOT Name like '%Development Kit%')"
+# https://poshuninstalljava.codeplex.com/SourceControl/latest#uninstall-java.ps1
 
 
 # Number of Installed Javas
@@ -1507,7 +1511,16 @@ If (($java_is_installed -eq $true) -and ($downloading_java_is_required -eq $true
                                 } # New-Object
                             $obj_old_java_uninstall.PSObject.TypeNames.Insert(0,"Uninstalled Old Java Versions")
 
-                    $old_java.Uninstall()
+                    # $uninstall = $old_java.Uninstall()
+ 
+                        try 
+                        {
+                            $uninstall = $old_java.Uninstall()
+                        }
+                        catch [System.Exception] 
+                        {
+                            $uninstall.ReturnValue
+                        }
 
             } # foreach ($old_java)
 
@@ -1555,6 +1568,7 @@ If (($java_is_installed -eq $true) -and ($downloading_java_is_required -eq $true
 # Source: http://docs.oracle.com/javase/8/docs/technotes/guides/install/windows_installer_options.html
 # Source: http://docs.oracle.com/javacomponents/msi-jre8/install-guide/installing_jre_msi.htm#msi_install_command_line
 # Source: http://stackoverflow.com/questions/28043588/installing-jdk-8-and-jre-8-silently-on-a-windows-machine-through-command-line
+# Source: https://java.com/en/download/help/silent_install.xml
 
 <#
         jre [INSTALLCFG=configuration_file_path] [options]

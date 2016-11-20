@@ -109,6 +109,11 @@ $existing_javas = Get-ItemProperty $registry_paths -ErrorAction SilentlyContinue
 # https://poshuninstalljava.codeplex.com/SourceControl/latest#uninstall-java.ps1
 
 
+# Get-ItemProperty $registry_paths -ErrorAction SilentlyContinue | Where-Object { ($_.DisplayName -like "*Java*" -or $_.DisplayName -like "*J2SE Runtime*") -and ($_.Publisher -like "Oracle*" -or $_.Publisher -like "Sun*") -and (-not $_.DisplayName -like "*SDK*") -and (-not $_.DisplayName -like "*Development Kit*") }
+
+
+
+
 # Number of Installed Javas
 If ($existing_javas -eq $null) {
     $number_of_installed_javas = 0
@@ -135,7 +140,7 @@ If ($existing_javas -ne $null) {
                             $obj_original_java += New-Object -TypeName PSCustomObject -Property @{
                                 'Name'                          = $original_java.DisplayName.replace("(TM)","")
                                 'Version'                       = $original_java.DisplayVersion
-                                'Major_Version'                 = $original_java.VersionMajor
+                                'Major_Version'                 = [int32]$original_java.VersionMajor
                                 'Build_Number'                  = If ($Matches.P4 -ne $null) { [string]"b" + $Matches.P4 } Else { $continue = $true }
                                 'Install_Date'                  = $original_java.InstallDate
                                 'Install_Location'              = $original_java.InstallLocation
@@ -153,9 +158,9 @@ If ($existing_javas -ne $null) {
                                                                             $continue = $true
                                                                         } # else
                                 'Update_Number'                 = If (($original_java.PSChildName -match $regex_32_a) -or ($original_java.PSChildName -match $regex_32_b) -or ($original_java.PSChildName -match $regex_32_c) -or ($original_java.PSChildName -match $regex_32_d)) {
-                                                                            $original_java.DisplayName.Split()[-1]
+                                                                            [int32]$original_java.DisplayName.Split()[-1]
                                                                         } ElseIf (($original_java.PSChildName -match $regex_64_a) -or ($original_java.PSChildName -match $regex_64_b)) {
-                                                                            $original_java.DisplayName.Split()[-2]
+                                                                            [int32]$original_java.DisplayName.Split()[-2]
                                                                         } Else {
                                                                             $continue = $true
                                                                         } # else
@@ -242,11 +247,11 @@ If ((Test-Path $java_reg_path) -eq $true) {
     $installed_java_version_alternative_legacy_format = (Get-ChildItem "$java_home_path_reg\bin\java.exe").VersionInfo.ProductVersion
 
     # Latest installed Java Main Version:
-    $latest_installed_java_major_version = (Get-ChildItem "$java_home_path_reg\bin\java.exe").VersionInfo.ProductMajorPart
+    $latest_installed_java_major_version = [int32](Get-ChildItem "$java_home_path_reg\bin\java.exe").VersionInfo.ProductMajorPart
 
     # Installed Java Update Number (legacy_format):
     # 1110
-    $installed_java_alternative_legacy_update_number = (Get-ChildItem "$java_home_path_reg\bin\java.exe").VersionInfo.ProductBuildPart
+    $installed_java_alternative_legacy_update_number = [int32](Get-ChildItem "$java_home_path_reg\bin\java.exe").VersionInfo.ProductBuildPart
 
 } Else {
     $continue = $true
@@ -312,7 +317,7 @@ If ((Test-Path $java_reg_path) -eq $true) {
             $installed_baseline = $installed_java_version_reg.split("_")[0]
 
             # Installed Java Update Number (nnn):
-            $installed_update_number_reg = $installed_java_version_reg.split("_")[1]
+            $installed_update_number_reg = [int32]$installed_java_version_reg.split("_")[1]
 
 
             # Security Tab
@@ -387,7 +392,7 @@ If ((Test-Path $java_reg_path) -eq $true) {
             $installed_baseline = $installed_java_version_reg.split("_")[0]
 
             # Installed Java Update Number (nnn):
-            $installed_update_number_reg = $installed_java_version_reg.split("_")[1]
+            $installed_update_number_reg = [int32]$installed_java_version_reg.split("_")[1]
 
 
             # Security Tab
@@ -579,8 +584,9 @@ If ((($number_of_installed_javas -eq 1) -and ($auto_updater_is_installed -eq $fa
 
 
 
-            # The Duplicate Java Uninstallation Protocol (Fast)
-            If ($installed_java_version_alternative_legacy_format -ne $null) {
+            # The Duplicate Java Uninstallation Protocol
+            # If ($installed_java_version_alternative_legacy_format -ne $null) {
+            If ($obj_original_java -ne $null) {
 
                 $timestamp_multi = Get-Date -Format HH:mm:ss
                 $multi_text_1 = "$timestamp_multi - Initiating the Duplicate Java Uninstallation Protocol..."
@@ -595,11 +601,43 @@ If ((($number_of_installed_javas -eq 1) -and ($auto_updater_is_installed -eq $fa
                     Write-Output $multi_text_3
                 } # else
 
+
+
+
+                # Uninstall the Java Auto Updater
+                $the_java_auto_updater_exists = Check-InstalledSoftware "Java Auto Updater"
+
+                    If ($the_java_auto_updater_exists) {
+
+                            $argument_the_java_auto_updater = "/uninstall $($the_java_auto_updater_exists.PSChildName) /qn /norestart"
+                            Start-Process -FilePath $msiexec -ArgumentList "$argument_the_java_auto_updater" -Wait
+                            Start-Process -FilePath $msiexec -ArgumentList "/uninstall {4A03706F-666A-4037-7777-5F2748764D10} /qn /norestart" -Wait
+
+                                If ((Check-InstalledSoftware "Java Auto Updater").DisplayName -eq $null) {
+                                        $the_uninstall_text = "$($the_java_auto_updater_exists.DisplayName) is uninstalled."
+                                        $empty_line | Out-String
+                                        Write-Output $the_uninstall_text
+                                } Else {
+                                    $continue = $true
+                                } # else If (Check-InstalledSoftware)
+
+                    } Else {
+                        $continue = $true
+                    } # else If ($the_java_auto_updater_exists)
+
+
+
+
+                # Find out the most recent Java out of all the installed Javas
+                $highest_java_main_version = $obj_original_java | Select-Object -ExpandProperty Major_Version | Sort-Object -Descending | Select-Object -First 1
+                $highest_java_update_number = $obj_original_java | Where-Object Major_Version -eq $highest_java_main_version | Select-Object -ExpandProperty Update_Number | Sort-Object -Descending | Select-Object -First 1
+                $highest_java_version = $obj_original_java | Where-Object Major_Version -eq $highest_java_main_version | Where-Object Update_Number -eq $highest_java_update_number | Select-Object -ExpandProperty Version
+
                     ForEach ($java in $obj_original_java) {
 
-                        If ($java.Version -ne $installed_java_version_alternative_legacy_format) {
+                        If ($java.Version -ne $highest_java_version) {
 
-                            # Uninstall any duplicate and old instances of Java, including the "Java Auto Updater"
+                            # Uninstall any remaining duplicate and old instances of Java
                             # 8.0.1110.14
                             # Source: http://docs.oracle.com/javacomponents/msi-jre8/install-guide/installing_jre_msi.htm#msi_system_requirements
                             <#
@@ -610,7 +648,7 @@ If ((($number_of_installed_javas -eq 1) -and ($auto_updater_is_installed -eq $fa
 
                                     The value in curly braces is the MSI product code for the JRE about to be uninstalled. The latter part, 18025, correlates to the JRE version 1.8.0_25.
                             #>
-                            Start-Sleep -s 1
+                            Start-Sleep -s 2
                             Write-Verbose "$($java.Name) version $($java.Version) installed on $($java.Install_Date) is uninstalling..."
 
                                         $obj_duplicate_uninstall += New-Object -TypeName PSCustomObject -Property @{
@@ -638,6 +676,7 @@ If ((($number_of_installed_javas -eq 1) -and ($auto_updater_is_installed -eq $fa
                         } # else
                     } # ForEach ($java)
 
+
                 $timestamp_protocol = Get-Date -Format HH:mm:ss
                 $protocol_text = "$timestamp_protocol - The Duplicate Java Uninstallation Protocol completed."
                 $empty_line | Out-String
@@ -650,7 +689,7 @@ If ((($number_of_installed_javas -eq 1) -and ($auto_updater_is_installed -eq $fa
 
 
 
-            # Check the Status of Java after The Duplicate Java Uninstallation Protocol (quick uninstallation)
+            # Check the Status of Java after The Duplicate Java Uninstallation Protocol
             $java_is_installed = $false
             $32_bit_java_is_installed = $false
             $64_bit_java_is_installed = $false
@@ -718,7 +757,7 @@ If ($registry_paths_selection -ne $null) {
                             $obj_java_enumeration += New-Object -TypeName PSCustomObject -Property @{
                                 'Name'                          = $item.DisplayName.replace("(TM)","")
                                 'Version'                       = $item.DisplayVersion
-                                'Main Version'                  = $item.VersionMajor
+                                'Main Version'                  = [int32]$item.VersionMajor
                                 'Build'                         = If ($Matches.C4 -ne $null) { [string]"b" + $Matches.C4 } Else { $continue = $true }
                                 'Install Date'                  = $item.InstallDate
                                 'Install Location'              = $item.InstallLocation
@@ -736,9 +775,9 @@ If ($registry_paths_selection -ne $null) {
                                                                             $continue = $true
                                                                         } # else
                                 'Update Number'                 = If (($item.PSChildName -match $regex_32_a) -or ($item.PSChildName -match $regex_32_b) -or ($item.PSChildName -match $regex_32_c) -or ($item.PSChildName -match $regex_32_d)) {
-                                                                            $item.DisplayName.Split()[-1]
+                                                                            [int32]$item.DisplayName.Split()[-1]
                                                                         } ElseIf (($item.PSChildName -match $regex_64_a) -or ($item.PSChildName -match $regex_64_b)) {
-                                                                            $item.DisplayName.Split()[-2]
+                                                                            [int32]$item.DisplayName.Split()[-2]
                                                                         } Else {
                                                                             $continue = $true
                                                                         } # else
@@ -815,10 +854,10 @@ $current_baseline = $source.split("_")[0]
 
 # Most Recent Java Update Number (nnn):
 # $current_update_number = $Matches.P4
-$current_update_number = $source.split("_")[1]
+$current_update_number = [int32]$source.split("_")[1]
 
 # Most Recent Java Main Version (y):
-$current_main_version = $Matches.P2
+$current_main_version = [int32]$Matches.P2
 
 # Most Recent Java Version (Almost Full, with an underscore: x.y.z_nnn) - Legacy Format:
 # 1.8.0_111
@@ -905,8 +944,8 @@ $full_64_download_url = "http://javadl.sun.com/webapps/download/GetFile/$current
 
         $obj_most_recent += New-Object -TypeName PSCustomObject -Property @{
             'Most Recent Version'                       = $most_recent_java_version
-            'Most Recent Java Main Version'             = $current_main_version
-            'Most Recent Java Update Number'            = $current_update_number
+            'Most Recent Java Main Version'             = [int32]$current_main_version
+            'Most Recent Java Update Number'            = [int32]$current_update_number
             'Most Recent Build'                         = $current_build_number
             'Most Recent Build (Legacy Name, Full)'     = $current_version_build
             'Most Recent Version (Legacy Name)'         = $current_version_full
@@ -1152,7 +1191,7 @@ If ($java_is_installed -eq $true) {
     Write-Output $no_java_text_7
 
     # Offer the option to install a specific version of Java, if no Java is detected and the script is run in an elevated window
-    # Source: "Adding a Simple Menu to a Windows PowerShell Script": https://technet.microsoft.com/en-us/library/ff730939.aspx
+    # Source: Microsoft TechNet: "Adding a Simple Menu to a Windows PowerShell Script": https://technet.microsoft.com/en-us/library/ff730939.aspx
     # Credit: lamaar75: "Creating a Menu": http://powershell.com/cs/forums/t/9685.aspx
     If ($is_elevated -eq $true) {
         $empty_line | Out-String
@@ -1307,6 +1346,7 @@ Write-Progress -Id $id -Activity $activity -Status $status -CurrentOperation $ta
                         # http://download.oracle.com/otn/java/jdk/7u80-b15/jre-7u80-windows-x64.exe
                         # http://javadl.sun.com/webapps/download/GetFile/1.8.0_91-b15/windows-i586/jre-8u91-windows-x64.exe
                         # http://javadl.sun.com/webapps/download/GetFile/1.8.0_111-b14/windows-i586/jre-8u111-windows-x64.exe
+
 
 #>
 
@@ -1485,19 +1525,48 @@ Start-Sleep -s 5
 If (($java_is_installed -eq $true) -and ($downloading_java_is_required -eq $true) -and ($admin_corner -ne $true)) {
 
     $task_number = 7
-    $task = "Uninstalling Java (this may take a while, please hold on)..."
+    $task = "Uninstalling outdated Java..."
     Write-Progress -Id $id -Activity $activity -Status $status -CurrentOperation $task -PercentComplete (($task_number / $total_steps) * 100)
 
         # Win32_Product Class
-        Write-Verbose "Get-WmiObject -Class Win32_Product is very slow to run..."
-        $javases = Get-WmiObject -Class Win32_Product | Where-Object { ($_.Name -like "*Java*" -or $_.Name -like "*J2SE Runtime*") -and ($_.Vendor -like "Oracle*" -or $_.Vendor -like "Sun*" )}
+        # $javases = Get-WmiObject -Class Win32_Product | Where-Object { ($_.Name -like "*Java*" -or $_.Name -like "*J2SE Runtime*") -and ($_.Vendor -like "Oracle*" -or $_.Vendor -like "Sun*" )}
+        # ForEach ($old_java in $javases) {
+        # $uninstall = $old_java.Uninstall()
+        # } # foreach ($old_java)
+
+        # Uninstall the "Java Auto Updater"
+        $old_java_auto_updater_exists = Check-InstalledSoftware "Java Auto Updater"
+
+            If ($old_java_auto_updater_exists) {
+
+                                $obj_old_java_uninstall += New-Object -TypeName PSCustomObject -Property @{
+                                    'Computer'              = $computer
+                                #   'Computer'              = $old_java_auto_updater_exists.PSComputerName
+                                #   'Computer'              = $old_java_auto_updater_exists.__SERVER
+                                    'Name'                  = $old_java_auto_updater_exists.DisplayName.replace("(TM)","")
+                                    'Version'               = $old_java_auto_updater_exists.DisplayVersion
+                                    'IdentifyingNumber'     = $old_java_auto_updater_exists.PSChildName
+                                    'ProgramId'             = '-'
+                                    'MsiPackageCode'        = '-'
+                                } # New-Object
+                            $obj_old_java_uninstall.PSObject.TypeNames.Insert(0,"Uninstalled Old Java Versions")
+
+                    $argument_old_java_auto_updater = "/uninstall $($old_java_auto_updater_exists.PSChildName) /qn /norestart"
+                    Start-Process -FilePath $msiexec -ArgumentList "$argument_old_java_auto_updater" -Wait
+                    Start-Process -FilePath $msiexec -ArgumentList "/uninstall {4A03706F-666A-4037-7777-5F2748764D10} /qn /norestart" -Wait
+
+            } Else {
+                $continue = $true
+            } # else
+
+        $javases = Get-WmiObject -Class Win32_InstalledWin32Program | Where-Object { ($_.Name -like "*Java*" -or $_.Name -like "*J2SE Runtime*") -and ($_.Vendor -like "Oracle*" -or $_.Vendor -like "Sun*" )}
 
         If ($javases -ne $null) {
 
             ForEach ($old_java in $javases) {
 
-                    # Uninstall all instances of Java, including the "Java Auto Updater"
-                    Write-Verbose "$($old_java.Name) version $($old_java.Version) installed on $($old_java.InstallDate) is uninstalling..."
+                    # Uninstall all instances of Java, apart from the "Java Auto Updater"
+                    $argument_old_java = "/uninstall $($old_java.MsiProductCode) /qn /norestart"
 
                                 $obj_old_java_uninstall += New-Object -TypeName PSCustomObject -Property @{
                                     'Computer'              = $computer
@@ -1505,27 +1574,30 @@ If (($java_is_installed -eq $true) -and ($downloading_java_is_required -eq $true
                                 #   'Computer'              = $old_java.__SERVER
                                     'Name'                  = $old_java.Name.replace("(TM)","")
                                     'Version'               = $old_java.Version
-                                    'IdentifyingNumber'     = $old_java.IdentifyingNumber
-                                    'InstallDate'           = $old_java.InstallDate
-                                    'InstallLocation'       = $old_java.InstallLocation
+                                    'IdentifyingNumber'     = $old_java.MsiProductCode
+                                    'ProgramId'             = $old_java.ProgramId
+                                    'MsiPackageCode'        = $old_java.MsiPackageCode
                                 } # New-Object
                             $obj_old_java_uninstall.PSObject.TypeNames.Insert(0,"Uninstalled Old Java Versions")
 
-                    # $uninstall = $old_java.Uninstall()
- 
-                        try 
+                        try
                         {
-                            $uninstall = $old_java.Uninstall()
+                            $uninstall = Start-Process -FilePath $msiexec -ArgumentList "$argument_old_java" -Wait
+                            $uninstall
                         }
-                        catch [System.Exception] 
+                        catch [System.Exception]
                         {
                             $uninstall.ReturnValue
                         }
+
+                    Start-Sleep -s 4
 
             } # foreach ($old_java)
 
 <#
             # Delete Java Registry Keys
+            # Remove-Item -Recurse 'HKLM:\SOFTWARE\JavaSoft\Java Update' -Force
+            # Remove-Item -Recurse 'HKLM:\SOFTWARE\Wow6432Node\JavaSoft\Java Update' -Force
             Remove-Item -Recurse 'HKLM:\SOFTWARE\JavaSoft' -Force
             Remove-Item -Recurse 'HKLM:\SOFTWARE\JreMetrics' -Force
             Remove-Item -Recurse 'HKLM:\SOFTWARE\Wow6432Node\JavaSoft' -Force
@@ -1539,7 +1611,7 @@ If (($java_is_installed -eq $true) -and ($downloading_java_is_required -eq $true
 #>
 
             # Display the uninstalled Java versions in console
-            $obj_old_java_uninstall_selection = $obj_old_java_uninstall | Select-Object 'Name','Version','Computer','InstallDate'
+            $obj_old_java_uninstall_selection = $obj_old_java_uninstall | Select-Object 'Name','Version','Computer'
             $empty_line | Out-String
             $header_old_java_uninstall = "Uninstalled Old Java Versions"
             $coline_old_java_uninstall = "-----------------------------"
@@ -1550,8 +1622,6 @@ If (($java_is_installed -eq $true) -and ($downloading_java_is_required -eq $true
         } Else {
             $continue = $true
         } # else [If ($javases)]
-
-    Start-Sleep -s 5
 
 } Else {
     $continue = $true
@@ -1711,9 +1781,13 @@ $new_java_auto_updater_exists = Check-InstalledSoftware "Java Auto Updater"
             Start-Process -FilePath $msiexec -ArgumentList "$argument_new_java_auto_updater" -Wait
             Start-Process -FilePath $msiexec -ArgumentList "/uninstall {4A03706F-666A-4037-7777-5F2748764D10} /qn /norestart" -Wait
 
-                        $new_uninstall_text = "$($new_java_auto_updater_exists.DisplayName) is uninstalled."
-                        $empty_line | Out-String
-                        Write-Output $new_uninstall_text
+                        If ((Check-InstalledSoftware "Java Auto Updater").DisplayName -eq $null) {
+                            $new_uninstall_text = "$($new_java_auto_updater_exists.DisplayName) is uninstalled."
+                            $empty_line | Out-String
+                            Write-Output $new_uninstall_text
+                        } Else {
+                            $continue = $true
+                        } # else If (Check-InstalledSoftware)
 
     } Else {
         $continue = $true
@@ -1793,7 +1867,7 @@ http://powershell.com/cs/blogs/tips/archive/2011/05/04/test-internet-connection.
 http://powershell.com/cs/PowerTips_Monthly_Volume_8.pdf#IDERA-1702_PS-PowerShellMonthlyTipsVol8-jan2014             # Tobias Weltner: "PowerTips Monthly vol 8 January 2014"
 http://stackoverflow.com/questions/29266622/how-to-run-exe-with-without-elevated-privileges-from-powershell?rq=1    # alejandro5042: "How to run exe with/without elevated privileges from PowerShell"
 http://stackoverflow.com/questions/5466329/whats-the-best-way-to-determine-the-location-of-the-current-powershell-script?noredirect=1&lq=1      # JaredPar and Matthew Pirocchi "What's the best way to determine the location of the current PowerShell script?"
-https://technet.microsoft.com/en-us/library/ff730939.aspx                                                           # "Adding a Simple Menu to a Windows PowerShell Script"
+https://technet.microsoft.com/en-us/library/ff730939.aspx                                                           # Microsoft TechNet: "Adding a Simple Menu to a Windows PowerShell Script"
 http://powershell.com/cs/forums/t/9685.aspx                                                                         # lamaar75: "Creating a Menu"
 http://stackoverflow.com/questions/10941756/powershell-show-elapsed-time                                            # Jeff: "Powershell show elapsed time"
 
@@ -1818,51 +1892,60 @@ installed Java versions on the system. If any outdated Java versions are found,
 tries to update the Java.
 
 .DESCRIPTION
-Java-Update downloads a list of the most recent Java version numbers
-against which it compares the Java version numbers found on the system and displays,
-whether a Java update is needed or not. The actual update process naturally needs
-elevated rights and if a working Internet connection is not found, Java-Update will
-exit at Step 9.
+Java-Update downloads a list of the most recent Java version numbers against which
+it compares the Java version numbers found on the system and displays, whether a
+Java update is needed or not. The actual update process naturally needs elevated
+rights, and if a working Internet connection is not found, Java-Update will exit
+at Step 8. Java-Update detects the installed Java(s) by querying the Windows
+registry for installed programs. The keys from
+HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\ and
+HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\ are read on 64-bit
+computers and on the 32-bit computers only the latter path is accessed.
 
 Java-Update tries to write several Java-related configuration files at an early
-stage, the "deployment.properties" -file in Step 4 and an Install Configuration File
-in Step 5 (java_config.txt). In Step 6, if enough rights are granted (run as an
-administrator) Java-Update tries to remove the excessive duplicate Java versions,
-so that only those Java versions, which are deemed to be the latest, will remain.
-Usually only one instance of Java will remain, but if the both the 32-bit and 64-bit
-Javas have the same latest version number, both versions of Java (32-bit and 64-bit)
-will be preserved). Java Auto Updater will also be uninstalled. In Step 6 the
-msiexec is called, and the process runs in a normal pace.
+stage, the "deployment.properties" -file in Step 4 and an Install Configuration
+File in Step 5 (java_config.txt). In Step 6, if enough rights are granted (run
+as an administrator) Java-Update tries to remove the excessive duplicate Java
+versions, so that only those Java versions, which are deemed to be the latest,
+will remain. Usually only one instance of Java will remain, but if the both the
+32-bit and 64-bit Javas have the same latest version number, both versions of Java
+(32-bit and 64-bit) will be preserved). Java Auto Updater will also be uninstalled.
+In Step 6 the msiexec.exe is called to uninstall old Java(s), so the process runs
+in a normal pace.
 
 If Java-Update is run without elevated rights (but with a working Internet
 connection) in a machine with old Java versions, it will be shown that a Java update
-is needed, but Java-Update will exit with a fail before actually downloading any
-files or making any changes to the system. To perform an update with Java-Update,
-PowerShell has to be run in an elevated window (run as an administrator).
+is needed, but Java-Update will exit at Step 13 before actually downloading any
+files. To perform an update with Java-Update, PowerShell has to be run in an
+elevated window (run as an administrator).
 
 If Java-Update is run in an elevated PowerShell window and no Java is detected,
 the script offers the option to install Java in in the "Admin Corner", where, in
-contrary to the main autonomous nature of Java-Update, an end-user input is required.
+contrary to the main autonomous nature of Java-Update, an end-user input is
+required.
 
-If Java-Update is run with elevated rights (but with a working Internet connection)
-in a machine with old Java versions, Java-Update tries first quickly to remove the
-excessive duplicate Java versions (in Step 6) and in the update procedure (if old
-Java has been found and Java-Update is run with administrative rights) Java-Update
-downloads the Java uninstaller from Oracle/Sun (a file which is not used with this
-script) and a full Java offline installer from Sun (the 64-bit Java for a 64-bit
-machine and the 32-bit Java for a 32-bit machine). After stopping several
-Java-related processes Java-Update uninstalls the outdated Java version(s) with the
-notoriously slow Get-WmiObject -Class Win32_Product command and installs the
-downloaded Java version.
+If Java-Update is run with elevated rights (with a working Internet connection) in
+a machine with old Java versions, Java-Update tries first to remove the excessive
+duplicate Java versions (in Step 6) and in the update procedure (if the most recent
+non-beta Java version is not detected and Java-Update is run with administrative
+rights) Java-Update downloads the Java uninstaller from Oracle/Sun (a file which
+is not used with this script) and a full Java offline installer from Sun
+(the 64-bit Java for a 64-bit machine and the 32-bit Java for a 32-bit machine).
+After stopping several Java-related processes Java-Update uninstalls the outdated
+Java version(s) in two phases (Java Auto Updater first and then the other Javas
+as listed by Get-WmiObject -Class Win32_InstalledWin32Program command) with the
+msiexec.exe /uninstall command and installs the downloaded Java version.
 
 .OUTPUTS
-Displays Java related information in console. Tries to update outdated Javas
-to its latest version, if old Java(s) is/are found and if Java-Update is run in an
-elevated Powershell window. In addition to that...
-
+Displays Java related information in console. Tries to remove excessive (duplicate)
+Java versions and update the one remaining instance of Java to the latest non-beta
+version (the 64-bit Java for a 64-bit machine and the 32-bit Java for a 32-bit
+machine), if old Java(s) is/are found, if Java-Update is run in an elevated
+Powershell window and if a working Internet connection is detected.
+In addition to that...
 
 The Java Deployment Configuration File (deployment.properties) is altered with new parameters,
-if it is found in one of its default Windows locations and the following backups are made. To
+if it is found in one of its default Windows locations, and the following backups are made. To
 see the actual values that are being written, please see the Step 4 above (altering the
 duplicated values below won't affect the script in any meaningful way):
 
@@ -1896,6 +1979,11 @@ duplicated values below won't affect the script in any meaningful way):
     The %USER_HOME_DIRECTORY% location represents the Home directory of an user, such as
     C:\Users\<username> and may be displayed in PowerShell with the [Environment]::GetFolderPath("User") command.
 
+    The "Store user settings in the roaming profile" Java setting in the Java Control Panel (Advanced Tab)
+    determines, whether the Windows path 1 or 2 is used. The default option is Windows path 1 (i.e. "Store user
+    settings in the roaming profile" = false) i.e. %USER_HOME_DIRECTORY%\AppData\LocalLow\Sun\Java\Deployment\
+    is used by default.
+
 
     deployment.webjava.enabled=false        Security Tab: Enable Java content in the browser
                                             Set to true to run applets or Java Web Start (JWS) applications.
@@ -1915,9 +2003,10 @@ below won't affect the script in any meaningful way)
 
     Install Configuration File in Step 5 (java_config.txt):
 
-        Windows:          [Current_Windows_Temporary_File_Folder]
+        Windows:          %TEMP%\java_config.txt
 
 
+    The %TEMP% location represents the current Windows temporary file folder.
     Please see the Notes-section below, how to determine where the current Windows
     temporary file folder is located. In PowerShell the command $env:temp displays
     the temp-folder path.
@@ -1962,7 +2051,7 @@ update procedure a log-file is also created to the same location.
 
 
     java_update_chart.csv           Gathered from an online XML-file.
-    java_baseline.csv               Containing the most recent Java version numbers.
+    java_baseline.csv               Contains the most recent Java version numbers.
     java_install.log                A log-file about the installation procedure.
 
 
@@ -1993,7 +2082,7 @@ if the system is deemed up-to-date).
 For performing any actual updates with Java-Update, it's mandatory to
 run this script in an elevated PowerShell window (where PowerShell has been started
 with the 'run as an administrator' option). The elevated rights are needed for
-uninstalling Java and installing Java.
+uninstalling Java(s) and installing Java.
 
 Please also notice that during the actual update phase Java-Update closes a bunch
 of processes without any further notice in Step 18 and may do so also in Step 6.
@@ -2006,6 +2095,18 @@ Please note that when run in an elevated PowerShell window and old Java(s)
 is/are detected, Java-Update will automatically try to uninstall them and download
 files from the Internet without prompting the end-user beforehand or without asking
 any confirmations (in Step 6 and from Step 16 onwards).
+
+The notoriously slow and possibly harmful Get-WmiObject -Class Win32_Product command
+is deliberately not used for listing the installed Javas or for performing
+uninstallations despite the powerful Uninstall-method associated with this command,
+since the Win32_Product Class has some unpleasant behaviors - namely it uses a
+provider DLL that validates the consistency of every installed MSI package on the
+computer (msiprov.dll with the mandatorily initiated resiliency check, in which the
+installations are verified and possibly also repaired or repair-installed), which
+is the main reason behind the slow performance of this command. All in all
+Win32_product Class is not query optimized and in Java-Update a combination of
+various registry queries, msiexec.exe and
+Get-WmiObject -Class Win32_InstalledWin32Program is used instead.
 
 Please note that the downloaded files are placed in a directory, which is specified
 with the $path variable (at line 15). The $env:temp variable points
@@ -2022,7 +2123,7 @@ http://www.eightforums.com/tutorials/23500-temporary-files-folder-change-locatio
 
     Homepage:           https://github.com/auberginehill/java-update
     Short URL:          http://tinyurl.com/hh7krx3
-    Version:            1.1
+    Version:            1.2
 
 .EXAMPLE
 ./Java-Update

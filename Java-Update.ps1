@@ -296,10 +296,10 @@ If ((Test-Path $java_reg_path) -eq $true) {
             $app_path = $appdata_path
 
                 If ((Test-Path $appdata_path\deployment.properties_original) -eq $true) {
-                    # If the "original" version of the deployment.properties file exists, do not overwrite it, but instead create another backup that gets overwritten each time this script is run this deep (practically if an update is attempted after the first update attempt, see below)
+                    # If the "original" version of the deployment.properties file exists, do not overwrite it, but instead create another backup that gets overwritten each time this script is run this deep
                     copy $appdata_path\deployment.properties $appdata_path\deployment.properties.old
                 } Else {
-                    # If an "original" version of this file does not exist, create it (practically when an update is attempted with this script for the first time)
+                    # If an "original" version of this file does not exist, create it (practically when this script is run for the first time)
                     copy $appdata_path\deployment.properties $appdata_path\deployment.properties_original
                 } # else
 
@@ -371,10 +371,10 @@ If ((Test-Path $java_reg_path) -eq $true) {
             $app_path = $alternative_appdata_path
 
                 If ((Test-Path $alternative_appdata_path\deployment.properties_original) -eq $true) {
-                    # If the "original" version of the deployment.properties file exists, do not overwrite it, but instead create another backup that gets overwritten each time this script is run this deep (practically if an update is attempted after the first update attempt, see below)
+                    # If the "original" version of the deployment.properties file exists, do not overwrite it, but instead create another backup that gets overwritten each time this script is run this deep
                     copy $alternative_appdata_path\deployment.properties $alternative_appdata_path\deployment.properties.old
                 } Else {
-                    # If an "original" version of this file does not exist, create it (practically when an update is attempted with this script for the first time)
+                    # If an "original" version of this file does not exist, create it (practically when this script is run for the first time)
                     copy $alternative_appdata_path\deployment.properties $alternative_appdata_path\deployment.properties_original
                 } # else
 
@@ -1957,15 +1957,14 @@ duplicated values below won't affect the script in any meaningful way):
         Windows path 2:   %USER_HOME_DIRECTORY%\AppData\Roaming\Sun\Java\Deployment\deployment.properties
 
 
-    'Original' file, which is created when the script tries to update something for
-    the first time:
+    'Original' file, which is created when the script is run for the first time:
 
         Windows path 1:   %USER_HOME_DIRECTORY%\AppData\LocalLow\Sun\Java\Deployment\deployment.properties_original
         Windows path 2:   %USER_HOME_DIRECTORY%\AppData\Roaming\Sun\Java\Deployment\deployment.properties_original
 
 
-    'Backup' file, which is created when the script tries to update something for
-    the second time and which gets overwritten in each successive update cycle:
+    'Backup' file, which is created when the script is run for the second time 
+    and which gets overwritten in each successive time the script is run:
 
         Windows path 1:   %USER_HOME_DIRECTORY%\AppData\LocalLow\Sun\Java\Deployment\deployment.properties.old
         Windows path 2:   %USER_HOME_DIRECTORY%\AppData\Roaming\Sun\Java\Deployment\deployment.properties.old

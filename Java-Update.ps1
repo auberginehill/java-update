@@ -1907,33 +1907,34 @@ stage, the "deployment.properties" -file in Step 4 and an Install Configuration
 File in Step 5 (java_config.txt). In Step 6, if enough rights are granted (run
 as an administrator) Java-Update tries to remove the excessive duplicate Java
 versions, so that only those Java versions, which are deemed to be the latest,
-will remain. Usually only one instance of Java will remain, but if the both the
+will remain. Usually only one instance of Java will remain, but if the both
 32-bit and 64-bit Javas have the same latest version number, both versions of Java
-(32-bit and 64-bit) will be preserved). Java Auto Updater will also be uninstalled.
-In Step 6 the msiexec.exe is called to uninstall old Java(s), so the process runs
-in a normal pace.
+(32-bit and 64-bit) will be preserved. At this stage the Java Auto Updater will
+also be uninstalled. In Step 6 the msiexec.exe is called to uninstall old Java(s),
+so the process runs at a normal pace.
 
 If Java-Update is run without elevated rights (but with a working Internet
-connection) in a machine with old Java versions, it will be shown that a Java update
-is needed, but Java-Update will exit at Step 13 before actually downloading any
-files. To perform an update with Java-Update, PowerShell has to be run in an
-elevated window (run as an administrator).
+connection) in a machine with old Java versions, it will be shown that a Java
+update is needed, but Java-Update will exit at Step 13 before actually
+downloading any files. To perform an update with Java-Update, PowerShell has to
+be run in an elevated window (run as an administrator).
 
 If Java-Update is run in an elevated PowerShell window and no Java is detected,
-the script offers the option to install Java in in the "Admin Corner", where, in
-contrary to the main autonomous nature of Java-Update, an end-user input is
-required.
+the script offers the option to install Java in the "Admin Corner", where, in
+contrary to the main autonomous nature of Java-Update, an end-user input
+is required.
 
-If Java-Update is run with elevated rights (with a working Internet connection) in
-a machine with old Java versions, Java-Update tries first to remove the excessive
-duplicate Java versions (in Step 6) and in the update procedure (if the most recent
-non-beta Java version is not detected and Java-Update is run with administrative
-rights) Java-Update downloads the Java uninstaller from Oracle/Sun (a file which
-is not used with this script) and a full Java offline installer from Sun
-(the 64-bit Java for a 64-bit machine and the 32-bit Java for a 32-bit machine).
-After stopping several Java-related processes Java-Update uninstalls the outdated
-Java version(s) in two phases (Java Auto Updater first and then the other Javas
-as listed by Get-WmiObject -Class Win32_InstalledWin32Program command) with the
+If Java-Update is run with elevated rights (with a working Internet connection)
+in a machine with old Java versions, Java-Update tries first to remove the
+excessive duplicate Java versions (in Step 6) and in the update procedure
+(if the most recent non-beta Java version is not detected and Java-Update is run
+with administrative rights) Java-Update downloads the Java uninstaller from
+Oracle/Sun (a file which is not used with this script) and a full Java offline
+installer from Sun (the 64-bit Java for a 64-bit machine and the 32-bit Java for
+a 32-bit machine). After stopping several Java-related processes Java-Update
+uninstalls the outdated Java version(s) in two phases (Java Auto Updater first
+and then the other Javas as listed by
+Get-WmiObject -Class Win32_InstalledWin32Program command) with the
 msiexec.exe /uninstall command and installs the downloaded Java version.
 
 .OUTPUTS
@@ -2050,9 +2051,15 @@ Additionally two auxiliary csv-files are created at $path and during the actual
 update procedure a log-file is also created to the same location.
 
 
-    java_update_chart.csv           Gathered from an online XML-file.
-    java_baseline.csv               Contains the most recent Java version numbers.
-    java_install.log                A log-file about the installation procedure.
+    %TEMP%\java_update_chart.csv        Gathered from an online XML-file.
+    %TEMP%\java_baseline.csv            Contains the most recent Java version numbers.
+    %TEMP%\java_install.log             A log-file about the installation procedure.
+
+
+    The %TEMP% location represents the current Windows temporary file folder.
+    Please see the Notes-section below, how to determine where the current Windows
+    temporary file folder is located. In PowerShell the command $env:temp displays
+    the temp-folder path.
 
 
 To open these file locations in a Resource Manager Window, for instance a command

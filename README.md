@@ -34,13 +34,13 @@
       <td style="padding:6px"><strong>Description:</strong></td>
       <td style="padding:6px">Java-Update downloads a list of the most recent Java version numbers against which it compares the Java version numbers found on the system and displays, whether a Java update is needed or not. The actual update process naturally needs elevated rights, and if a working Internet connection is not found, Java-Update will exit at Step 8. Java-Update detects the installed Java(s) by querying the Windows registry for installed programs. The keys from <code>HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\</code> and <code>HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\</code> are read on 64-bit computers and on the 32-bit computers only the latter path is accessed.
       <br />
-      <br />Java-Update tries to write several Java-related configuration files at an early stage, the "<code>deployment.properties</code>" -file in Step 4 and an Install Configuration File in Step 5 (<code>java_config.txt</code>). In Step 6, if enough rights are granted (run as an administrator) Java-Update tries to remove the excessive duplicate Java versions, so that only those Java versions, which are deemed to be the latest, will remain. Usually only one instance of Java will remain, but if the both the 32-bit and 64-bit Javas have the same latest version number, both versions of Java (32-bit and 64-bit) will be preserved). Java Auto Updater will also be uninstalled. In Step 6 the <code>msiexec.exe</code> is called to uninstall old Java(s), so the process runs in a normal pace.
+      <br />Java-Update tries to write several Java-related configuration files at an early stage, the "<code>deployment.properties</code>" -file in Step 4 and an Install Configuration File in Step 5 (<code>java_config.txt</code>). In Step 6, if enough rights are granted (run as an administrator) Java-Update tries to remove the excessive duplicate Java versions, so that only those Java versions, which are deemed to be the latest, will remain. Usually only one instance of Java will remain, but if the both the 32-bit and 64-bit Javas have the same latest version number, both versions of Java (32-bit and 64-bit) will be preserved. At this stage the Java Auto Updater will also be uninstalled. In Step 6 the <code>msiexec.exe</code> is called to uninstall old Java(s), so the process runs at a normal pace.
       <br />
       <br />If Java-Update is run without elevated rights (but with a working Internet connection) in a machine with old Java versions, it will be shown that a Java update is needed, but Java-Update will exit at Step 13 before actually downloading any files. To perform an update with Java-Update, PowerShell has to be run in an elevated window (run as an administrator).
       <br />
       <br />If Java-Update is run in an elevated PowerShell window and no Java is detected, the script offers the option to install Java in in the "<strong>Admin Corner</strong>", where, in contrary to the main autonomous nature of Java-Update, an end-user input is required.
       <br />
-      <br />If Java-Update is run with elevated rights (with a working Internet connection) in a machine with old Java versions, Java-Update tries first quickly to remove the excessive duplicate Java versions (in Step 6) and in the update procedure (if the most recent non-beta Java version is not detected and Java-Update is run with administrative rights) Java-Update downloads the Java uninstaller from Oracle/Sun (a file which is not used with this script) and a full Java offline installer from Sun (the 64-bit Java for a 64-bit machine and the 32-bit Java for a 32-bit machine). After stopping several Java-related processes Java-Update uninstalls the outdated Java version(s) in two phases (Java Auto Updater first and then the other Javas as listed by <code>Get-WmiObject -Class Win32_InstalledWin32Program</code> command) with the <code>msiexec.exe /uninstall</code> command and installs the downloaded Java version.</td>
+      <br />If Java-Update is run with elevated rights (with a working Internet connection) in a machine with old Java versions, Java-Update tries first to remove the excessive duplicate Java versions (in Step 6) and in the update procedure (if the most recent non-beta Java version is not detected and Java-Update is run with administrative rights) Java-Update downloads the Java uninstaller from Oracle/Sun (a file which is not used with this script) and a full Java offline installer from Sun (the 64-bit Java for a 64-bit machine and the 32-bit Java for a 32-bit machine). After stopping several Java-related processes Java-Update uninstalls the outdated Java version(s) in two phases (Java Auto Updater first and then the other Javas as listed by <code>Get-WmiObject -Class Win32_InstalledWin32Program</code> command) with the <code>msiexec.exe /uninstall</code> command and installs the downloaded Java version.</td>
    </tr>
    <tr>
       <td style="padding:6px"><strong>Homepage:</strong></td>
@@ -231,7 +231,7 @@
                         <table>
                             <tr>
                                 <td style="padding:6px"><strong>OS</strong></td>
-                                <td style="padding:6px"><strong>Path</strong></td>
+                                <td style="padding:6px"><strong>File</strong></td>
                             </tr>
                             <tr>
                                 <td style="padding:6px">Windows:</td>
@@ -316,19 +316,20 @@
                                 <td style="padding:6px"><strong>Description</strong></td>
                             </tr>
                             <tr>
-                                <td style="padding:6px"><code>java_update_chart.csv</code></td>
+                                <td style="padding:6px"><code>%TEMP%\java_update_chart.csv</code></td>
                                 <td style="padding:6px">Gathered from an online XML-file.</td>
                             </tr>
                             <tr>
-                                <td style="padding:6px"><code>java_baseline.csv</code></td>
+                                <td style="padding:6px"><code>%TEMP%\java_baseline.csv</code></td>
                                 <td style="padding:6px">Contains the most recent Java version numbers.</td>
                             </tr>
                             <tr>
-                                <td style="padding:6px"><code>java_install.log</code></td>
+                                <td style="padding:6px"><code>%TEMP%\java_install.log</code></td>
                                 <td style="padding:6px">A log-file about the installation procedure.</td>
                             </tr>
                         </table>
                     </p>
+                    <p>The <code>%TEMP%</code> location represents the current Windows temporary file folder. Please see the Notes-section below, how to determine where the current Windows temporary file folder is located. In PowerShell the command <code>$env:temp</code> displays the temp-folder path.</p>                    
                 </ol>
                 <p>
                     <li>To open these file locations in a Resource Manager Window, for instance a command
@@ -507,10 +508,7 @@
         <td style="padding:6px"><a href="https://github.com/auberginehill/java-update">Script Homepage</a></td>
     </tr>
     <tr>
-        <th rowspan="13"></th>
-        <td style="padding:6px">Bob Ross: <a href="http://powershell.com/cs/forums/t/6128.aspx">Automated Adobe Java Maintenance PowerScript for Public Computing Environment</a> (or one of the <a href="https://web.archive.org/web/20150818075129/http://powershell.com/cs/forums/t/6128.aspx">archive.org versions</a>)</td>
-    </tr>
-    <tr>
+        <th rowspan="8"></th>
         <td style="padding:6px">ps1: <a href="http://powershell.com/cs/blogs/tips/archive/2011/05/04/test-internet-connection.aspx">Test Internet connection</a> (or one of the <a href="https://web.archive.org/web/20110612212629/http://powershell.com/cs/blogs/tips/archive/2011/05/04/test-internet-connection.aspx">archive.org versions</a>)</td>
     </tr>
     <tr>
@@ -518,15 +516,6 @@
     </tr>
     <tr>
         <td style="padding:6px">alejandro5042: <a href="http://stackoverflow.com/questions/29266622/how-to-run-exe-with-without-elevated-privileges-from-powershell?rq=1">How to run exe with/without elevated privileges from PowerShell</a></td>
-    </tr>
-    <tr>
-        <td style="padding:6px">Raven Hunter: <a href="https://community.spiceworks.com/topic/487699-a-little-powershell-help-flash-version-query">A little powershell help, Flash Version Query</a></td>
-    </tr>
-    <tr>
-        <td style="padding:6px">Kreloc: <a href="https://www.reddit.com/r/PowerShell/comments/3tgr2m/get_current_versions_of_adobe_products/">Get current versions of Adobe Products</a></td>
-    </tr>
-    <tr>
-        <td style="padding:6px">chocolatey: <a href="https://chocolatey.org/packages/flashplayerplugin">Java Plugin</a></td>
     </tr>
     <tr>
         <td style="padding:6px">JaredPar and Matthew Pirocchi: <a href="http://stackoverflow.com/questions/5466329/whats-the-best-way-to-determine-the-location-of-the-current-powershell-script?noredirect=1&lq=1">What's the best way to determine the location of the current PowerShell script?</a></td>

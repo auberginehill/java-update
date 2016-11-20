@@ -199,7 +199,7 @@
                     <p>The "Store user settings in the roaming profile" Java setting in the Java Control Panel (Advanced Tab) determines, whether the Windows path 1 or 2 is used. The default option is Windows path 1 (i.e. "Store user settings in the roaming profile" = false) i.e. <code>%USER_HOME_DIRECTORY%\AppData\LocalLow\Sun\Java\Deployment\</code> is used by default.</p>
                 </ol>
                 <p>
-                    <li>To see the actual values that are being written, please see the Step 4 in the <a href="https://raw.githubusercontent.com/auberginehill/java-update/master/Java-Update.ps1">script</a> itself, where the original settings are overwritten with the following values:</li>
+                    <li>To see the actual values that are being written, please see the Step 4 in the <a href="https://raw.githubusercontent.com/auberginehill/java-update/master/Java-Update.ps1">script</a> itself, where the following values are added or forced (overwritten) upon the original settings:</li>
                 </p>
                 <ol>
                     <p>

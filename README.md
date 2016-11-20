@@ -101,9 +101,9 @@
 
 ### Screenshot
 
-<ol><ol><ol>
-<img class="screenshot" title="screenshot" alt="screenshot" height="60%" width="60%" src="https://raw.githubusercontent.com/auberginehill/java-update/master/Java-Update.png">
-</ol></ol></ol>
+<ol><ol><ol><ol><ol>
+<img class="screenshot" title="screenshot" alt="screenshot" height="80%" width="80%" src="https://raw.githubusercontent.com/auberginehill/java-update/master/Java-Update.png">
+</ol></ol></ol></ol></ol>
 
 
 

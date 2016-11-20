@@ -144,7 +144,7 @@
                             </tr>
                         </table>
                     </p>
-                    <p><strong>"Original" file</strong>, which is created when the script tries to update something for the first time:</p>
+                    <p><strong>"Original" file</strong>, which is created when the script is run for the first time:</p>
                     <p>
                         <table>
                             <tr>
@@ -161,7 +161,7 @@
                             </tr>
                         </table>
                     </p>
-                    <p><strong>"Backup" file</strong>, which is created when the script tries to update something for the second time and which gets overwritten in each successive update cycle:</p>
+                    <p><strong>"Backup" file</strong>, which is created when the script is run for the second time and which gets overwritten in each successive time the script is run:</p>
                     <p>
                         <table>
                             <tr>

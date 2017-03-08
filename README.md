@@ -553,7 +553,7 @@
         <td style="padding:6px"><a href="https://github.com/auberginehill/java-update">Script Homepage</a></td>
     </tr>
     <tr>
-        <th rowspan="8"></th>
+        <th rowspan="9"></th>
         <td style="padding:6px">ps1: <a href="http://powershell.com/cs/blogs/tips/archive/2011/05/04/test-internet-connection.aspx">Test Internet connection</a> (or one of the <a href="https://web.archive.org/web/20110612212629/http://powershell.com/cs/blogs/tips/archive/2011/05/04/test-internet-connection.aspx">archive.org versions</a>)</td>
     </tr>
     <tr>

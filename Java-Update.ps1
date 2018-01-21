@@ -840,7 +840,9 @@ $baseline_file = "$path\java_baseline.csv"
 
 Start-Sleep -Seconds 3
 
-$source = Get-Content $baseline_file | Select-Object -First 1
+# Selects the second result from java_baseline.csv
+# https://github.com/auberginehill/java-update/issues/1
+$source = Get-Content $baseline_file | Select-Object -Skip 1 | Select-Object -First 1
 $regex = $source -match "(?<P1>\d+).(?<P2>\d+).(?<P3>\d+)_(?<P4>\d+)"
 
 # Most Recent Java Baseline Version (x.y.z) - Old Name:
@@ -855,7 +857,7 @@ $current_main_version = [int32]$Matches.P2
 
 # Most Recent Java Version (Almost Full, with an underscore: x.y.z_nnn) - Legacy Format:
 # 1.8.0_111
-$current_version_full = Get-Content $baseline_file | Select-Object -First 1
+$current_version_full = $source
 
 
 
@@ -2136,7 +2138,7 @@ http://www.eightforums.com/tutorials/23500-temporary-files-folder-change-locatio
 
     Homepage:           https://github.com/auberginehill/java-update
     Short URL:          http://tinyurl.com/hh7krx3
-    Version:            1.3
+    Version:            1.4
 
 .EXAMPLE
 ./Java-Update

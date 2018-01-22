@@ -1897,9 +1897,15 @@ http://stackoverflow.com/questions/10941756/powershell-show-elapsed-time        
 .SYNOPSIS
 Retrieves the latest Java version numbers from the Interwebs, and looks for the
 installed Java versions on the system. If any outdated Java versions are found,
-tries to update the Java.
+tries to update the Java. ** Partially obsolete ** 
 
 .DESCRIPTION
+This is a partially obsolete script, please see 
+https://github.com/auberginehill/java-update/issues/1 for further details. 
+Java-Update.ps1 doesn't seem to work with JRE Family Version 9 or later versions 
+of Java. JRE Family Version 8 is deemed to be "the latest" by this script, which 
+only seems to be factually true concerning the 32-bit Java versions.
+
 Java-Update downloads a list of the most recent Java version numbers against which
 it compares the Java version numbers found on the system and displays, whether a
 Java update is needed or not. The actual update process naturally needs elevated
@@ -2085,14 +2091,12 @@ may be used at the PowerShell prompt window [PS>].
 Requires a working Internet connection for downloading a list of the most recent
 Java version numbers.
 
-Also requires a working Internet connection for downloading a Java uninstaller
-and a complete Java installer from Oracle/Sun (but this procedure is not initiated,
-if the system is deemed up-to-date). The download location URLs of the full
-installation files seem not to follow any pre-determined format anymore, but
-depending on the continuos availability of the information published on the web,
-Java-Update v1.3 and later versions of Java-Update are still expected to figure out
-the correct download locations of full installation files automatically for both
-32-bit and 64-bit Java versions (at Step 10 and Step 11).
+Also requires a working Internet connection for downloading a Java uninstaller 
+and a complete Java installer from Oracle/Sun (but this procedure is not initiated, 
+if the system is deemed up-to-date). The download location URLs of the full 
+installation files seem not to follow any pre-determined format anymore. 
+The download locations of full installation files for both 32-bit and 64-bit Java 
+versions are determined at Step 10 and Step 11.
 
 For performing any actual updates with Java-Update, it's mandatory to
 run this script in an elevated PowerShell window (where PowerShell has been started

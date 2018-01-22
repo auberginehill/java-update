@@ -31,6 +31,10 @@
         <td colspan="2" style="padding:6px">Windows PowerShell</td>
     </tr>
     <tr>
+        <td style="padding:6px"><strong>Status:</strong></td>
+        <td colspan="2" style="padding:6px">Partially obsolete, please see https://github.com/auberginehill/java-update/issues/1 for further details. Java-Update.ps1 doesn't seem to work with JRE Family Version 9 or later versions of Java. JRE Family Version 8 is deemed to be "the latest" by this script, which only seems to be factually true concerning the 32-bit Java versions.</td>
+    </tr>     
+    <tr>
         <td style="padding:6px"><strong>Description:</strong></td>
         <td colspan="2" style="padding:6px">
             <p>
@@ -369,7 +373,7 @@
         <td style="padding:6px">
             <ul>
                 <p>
-                    <li>Also requires a working Internet connection for downloading a Java uninstaller and a complete Java installer from Oracle/Sun (but this procedure is not initiated, if the system is deemed up-to-date). The download location URLs of the full installation files seem not to follow any pre-determined format anymore, but depending on the continuos availability of the information published on the web, Java-Update v1.3 and later versions of Java-Update are still expected to figure out the correct download locations of full installation files automatically for both 32-bit and 64-bit Java versions (at Step 10 and Step 11).</li>
+                    <li>Also requires a working Internet connection for downloading a Java uninstaller and a complete Java installer from Oracle/Sun (but this procedure is not initiated, if the system is deemed up-to-date). The download location URLs of the full installation files seem not to follow any pre-determined format anymore. The download locations of full installation files for both 32-bit and 64-bit Java versions are determined at Step 10 and Step 11.</li>
                 </p>
                 <p>
                     <li>For performing any actual updates with Java-Update, it's mandatory to run this script in an elevated PowerShell window (where PowerShell has been started with the 'run as an administrator' option). The elevated rights are needed for uninstalling Java(s) and installing Java.</li>

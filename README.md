@@ -32,7 +32,7 @@
     </tr>
     <tr>
         <td style="padding:6px"><strong>Status:</strong></td>
-        <td colspan="2" style="padding:6px">Partially obsolete, please see https://github.com/auberginehill/java-update/issues/1 for further details. Java-Update.ps1 doesn't seem to work with JRE Family Version 9 or later versions of Java. JRE Family Version 8 is deemed to be "the latest" by this script, which only seems to be factually true concerning the 32-bit Java versions.</td>
+        <td colspan="2" style="padding:6px"><strong>Partially obsolete</strong>, please see https://github.com/auberginehill/java-update/issues/1 for further details. Java-Update.ps1 doesn't seem to work with JRE Family Version 9 or later versions of Java. JRE Family Version 8 is deemed to be "the latest" by this script, which only seems to be factually true concerning the 32-bit Java versions.</td>
     </tr>     
     <tr>
         <td style="padding:6px"><strong>Description:</strong></td>
